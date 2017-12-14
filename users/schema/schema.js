@@ -1,5 +1,5 @@
 const graphql = require('graphql');
-const _ = require('lodash');
+const axios = require('axios');
 const {
   GraphQLObjectType,
   GraphQLString,
@@ -27,8 +27,12 @@ const RootQuery = new GraphQLObjectType({
       type: UserType,
       args: { id: { type: GraphQLString } },
       resolve(parentValue, args) {
-        // No necesito usar lodash, puedo ecribir esta linea asi: 'users.find((x) => { return x.id === args.id; });'
-        return _.find(users, { id: args.id });
+        // Usando lodash: return _.find(users, { id: args.id });
+        // No necesito usar lodash, puedo ecribir esta linea asi: 'return users.find((x) => { return x.id === args.id; });'
+        return axios.get(`http://localhost:3000/users/${args.id}`)
+          // Aqui axios acumula toda las data en un objeto llamado data detro de la respuesta, pero GraphQL no sabe eso,
+          // entonces utilizamos 'response => response.data' para que lo que se le pasa a GraphQL sea la data en cuestion y no la respuesta
+          .then(response => response.data);
       }
     }
   }
