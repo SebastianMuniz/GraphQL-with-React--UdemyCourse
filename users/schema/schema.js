@@ -7,12 +7,6 @@ const {
   GraphQLSchema
 } = graphql;
 
-// Data de ejemplo
-const users = [
-  { id: '23', firstName: 'Bill', age: 20 },
-  { id: '47', firstName: 'Samantha', age: 21 }
-];
-
 // Esquema de Usuario que representa el modelo que tenemos en base de datos
 // Esto le brinda a GraphQL la posibilidad de conocer el objecto y sus propiedades
 const UserType = new GraphQLObjectType({
