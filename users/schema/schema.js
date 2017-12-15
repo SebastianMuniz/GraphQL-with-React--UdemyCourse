@@ -17,8 +17,8 @@ const CompanyType = new GraphQLObjectType({
   }
 });
 
-// Esquema de Usuario que representa el modelo que tenemos en base de datos
-// Esto le brinda a GraphQL la posibilidad de conocer el objecto y sus propiedades
+// Esquema de Usuario que representa el modelo que usamos en GraphQL
+// Esto le brinda a GraphQL la posibilidad de conocer el objecto, sus propiedades y relalciones
 const UserType = new GraphQLObjectType({
   name: 'User',
   fields: {
@@ -28,6 +28,7 @@ const UserType = new GraphQLObjectType({
     company: {
       type: CompanyType,
     // Aqui usamos el metodo resolve() para instruir GraphQL donde encontrar la data para poblar este campo
+    // En este caso resolve(), lo que hace es recorrer la relacion entre User y Company
       resolve(parentValue, args) {
         return axios.get(`http://localhost:3000/companies/${parentValue.companyId}`)
           .then(response => response.data)
@@ -51,6 +52,14 @@ const RootQuery = new GraphQLObjectType({
           // Aqui axios acumula toda las data en un objeto llamado data detro de la respuesta, pero GraphQL no sabe eso,
           // entonces utilizamos 'response => response.data' para que lo que se le pasa a GraphQL sea la data en cuestion y no la respuesta
           .then(response => response.data);
+      }
+    },
+    company: {
+      type: CompanyType,
+      args: { id: { type: GraphQLString } },
+      resolve(parentValue, args) {
+        return axios.get(`http://localhost:3000/companies/${args.id}`)
+          .then(res => res.data);
       }
     }
   }
