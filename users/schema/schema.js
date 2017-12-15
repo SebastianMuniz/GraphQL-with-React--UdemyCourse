@@ -7,6 +7,16 @@ const {
   GraphQLSchema
 } = graphql;
 
+
+const CompanyType = new GraphQLObjectType({
+  name: 'Company',
+  fields: {
+    id: { type: GraphQLString },
+    name: { type: GraphQLString },
+    description: { type: GraphQLString }
+  }
+});
+
 // Esquema de Usuario que representa el modelo que tenemos en base de datos
 // Esto le brinda a GraphQL la posibilidad de conocer el objecto y sus propiedades
 const UserType = new GraphQLObjectType({
@@ -14,12 +24,20 @@ const UserType = new GraphQLObjectType({
   fields: {
     id: { type: GraphQLString },
     firstName: { type: GraphQLString },
-    age: { type: GraphQLInt }
+    age: { type: GraphQLInt },
+    company: {
+      type: CompanyType,
+    // Aqui usamos el metodo resolve() para instruir GraphQL donde encontrar la data para poblar este campo
+      resolve(parentValue, args) {
+        return axios.get(`http://localhost:3000/companies/${parentValue.companyId}`)
+          .then(response => response.data)
+      }
+    }
   }
 });
 
 // El proposito de este objeto es brindarle a GraphQL una especie de punto de entrada para que pueda buscar la informacion
-// El metodo 'resolve()' es la funcion que en realidad conecta con nuestra base de datos
+// El metodo 'resolve()' es la funcion que en realidad conecta con nuestra base de datos o conecta con una api externa
 const RootQuery = new GraphQLObjectType({
   name: 'RootQueryType',
   fields: {
