@@ -5,7 +5,8 @@ const {
   GraphQLString,
   GraphQLInt,
   GraphQLSchema,
-  GraphQLList
+  GraphQLList,
+  GraphQLNonNull
 } = graphql;
 
 
@@ -73,7 +74,60 @@ const RootQuery = new GraphQLObjectType({
   }
 });
 
+
+// El proposito de este objecto es actuar como enlace para cualquier modificacion de los datos que tenemos en base de datos,
+// ya sea agregar, borrar, modificar, etc.
+// Cada uno de los campos dentro de la propiedad 'fields' es una operacion distinta.
+const mutation = new GraphQLObjectType({
+  name: 'Mutation',
+  fields: {
+    addUser: {
+      // Especificamos el tipo que sera devuelto al completar la operacion.
+      // Este tipo puede no tiene porque ser el mismo que el del objecto que estamos manipulando.
+      type: UserType,
+      args: {
+        // NonNull es una validacion.
+        // Este metodo es un helper para asegurar que el objeto que estamos por insertar contiene un valor en esa propiedad 
+        firstName: { type: new GraphQLNonNull(GraphQLString) },
+        age: { type: new GraphQLNonNull(GraphQLInt) },
+        companyId: { type: GraphQLString },
+      },
+      resolve(parentValue, { firstName, age }) {
+        return axios.post(`http://localhost:3000/users`, { firstName, age })
+          .then(resp => resp.data);
+      }
+    },
+    deleteUser: {
+      type: UserType,
+      args: {
+        id: { type: new GraphQLNonNull(GraphQLString) }
+      },
+      resolve(parentValue, args) {
+        return axios.delete(`http://localhost:3000/users/${args.id}`)
+          .then(resp => resp.data);
+      }
+    },
+    editUser: {
+      type: UserType,
+      args: {
+        id: { type: new GraphQLNonNull(GraphQLString) },
+        firstName: { type: GraphQLString },
+        age: { type: GraphQLInt },
+        companyId: { type: GraphQLString },
+      },
+      resolve(parentValue, args) {
+        // En caso de editar en un objeto nos conviene usar 'args' ya que le pasamos todos los campos que lleguen a el editar
+        // Si no tubieramos un companyId, simplemente no sera incluido en el objeto
+        return axios.patch(`http://localhost:3000/users/${args.id}`, args)
+          .then(resp => resp.data);
+      }
+    }
+  }
+});
+
+
 // GraphQLSchema toma un RootQuery y devuelve una instancia de GraphQLSchema
 module.exports = new GraphQLSchema({
-  query: RootQuery
+  query: RootQuery,
+  mutation
 });
