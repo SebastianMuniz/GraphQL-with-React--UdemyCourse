@@ -4,24 +4,32 @@ const {
   GraphQLObjectType,
   GraphQLString,
   GraphQLInt,
-  GraphQLSchema
+  GraphQLSchema,
+  GraphQLList
 } = graphql;
 
 
 const CompanyType = new GraphQLObjectType({
   name: 'Company',
-  fields: {
+  fields: () => ({
     id: { type: GraphQLString },
     name: { type: GraphQLString },
-    description: { type: GraphQLString }
-  }
+    description: { type: GraphQLString },
+    users: {
+      type: new GraphQLList(UserType),
+      resolve(parentValue, args) {
+        return axios.get(`http://localhost:3000/companies/${parentValue.id}/users`)
+        .then(resp => resp.data);
+      }
+    }
+  })
 });
 
 // Esquema de Usuario que representa el modelo que usamos en GraphQL
-// Esto le brinda a GraphQL la posibilidad de conocer el objecto, sus propiedades y relalciones
+// Esto le brinda a GraphQL la posibilidad de conocer el objecto, sus propiedades y relaciones
 const UserType = new GraphQLObjectType({
   name: 'User',
-  fields: {
+  fields: () => ({
     id: { type: GraphQLString },
     firstName: { type: GraphQLString },
     age: { type: GraphQLInt },
@@ -34,7 +42,7 @@ const UserType = new GraphQLObjectType({
           .then(response => response.data)
       }
     }
-  }
+  })
 });
 
 // El proposito de este objeto es brindarle a GraphQL una especie de punto de entrada para que pueda buscar la informacion
@@ -59,7 +67,7 @@ const RootQuery = new GraphQLObjectType({
       args: { id: { type: GraphQLString } },
       resolve(parentValue, args) {
         return axios.get(`http://localhost:3000/companies/${args.id}`)
-          .then(res => res.data);
+          .then(resp => resp.data);
       }
     }
   }
